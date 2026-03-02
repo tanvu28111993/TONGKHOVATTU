@@ -62,7 +62,7 @@ export const Header: React.FC = () => {
       <div className="flex items-center gap-5">
         <div className="hidden xl:flex flex-col items-center justify-center">
              <span className="text-sm font-black text-[#FF8C00] uppercase tracking-widest drop-shadow-lg leading-none mb-0.5" style={{textShadow: '0 0 10px rgba(255, 140, 0, 0.3)'}}>
-                Quản Lý
+                TỔNG KHO
             </span>
              <span className="text-xl font-black text-[#FF8C00] uppercase tracking-widest drop-shadow-lg leading-none" style={{textShadow: '0 0 10px rgba(255, 140, 0, 0.3)'}}>
                 VẬT TƯ
