@@ -12,6 +12,7 @@ const InventoryManager = lazy(() => import('../Modules/Inventory/InventoryManage
 const MaterialManager = lazy(() => import('../Modules/Material/MaterialManager').then(m => ({ default: m.MaterialManager })));
 const ReferenceManager = lazy(() => import('../Modules/Reference/ReferenceManager').then(m => ({ default: m.ReferenceManager })));
 const PaperCalculationManager = lazy(() => import('../Modules/PaperCalculation/PaperCalculationManager').then(m => ({ default: m.PaperCalculationManager })));
+const ExpectedSchedule = lazy(() => import('../Modules/Schedule/ExpectedSchedule').then(m => ({ default: m.ExpectedSchedule })));
 
 // Optimization: Define route map statically outside component
 // This prevents object recreation on every render and keeps the component pure
@@ -21,6 +22,7 @@ const ROUTE_COMPONENTS: Partial<Record<MenuId, React.LazyExoticComponent<React.F
   INVENTORY: InventoryManager,
   REFERENCE: ReferenceManager,
   PAPER_CALCULATION: PaperCalculationManager,
+  EXPECTED_SCHEDULE: ExpectedSchedule,
   
   // Configured Material Inventory
   MATERIAL_INVENTORY: MaterialManager, 

@@ -11,7 +11,8 @@ import {
   BookOpen,
   Calculator, // New Icon
   Container,  // New Icon
-  Map         // New Icon
+  Map,        // New Icon
+  Calendar    // New Icon
 } from 'lucide-react';
 import { FULL_WIDTH_MENUS } from '../../utils';
 
@@ -29,6 +30,7 @@ const MENU_ITEMS: MenuItem[] = [
   // Group: Locations (Vị trí)
   { id: 'LOCATIONS', label: 'VỊ TRÍ KHO GIẤY', icon: MapPin }, 
   { id: 'MATERIAL_LOCATIONS', label: 'VỊ TRÍ KHO VẬT TƯ', icon: Map },
+  { id: 'EXPECTED_SCHEDULE', label: 'LỊCH DỰ KIẾN', icon: Calendar },
   
   // Group: Inventory (Tồn kho)
   { id: 'INVENTORY', label: 'TỒN KHO GIẤY', icon: Package },
