@@ -18,7 +18,7 @@ export const StatusWidget: React.FC<StatusWidgetProps> = ({ title, date, daysLef
     return (
         <div className="hidden md:flex flex-row items-center justify-between gap-2 px-4 py-2 rounded-lg bg-slate-800 border border-slate-600 shadow-lg shadow-black/50 w-[145px]">
             <div className="flex flex-col items-start gap-1">
-                <span className="text-[10px] font-bold text-white uppercase tracking-wider leading-none">
+                <span className="text-[10px] font-bold text-white uppercase tracking-wider leading-none whitespace-nowrap">
                     {title}
                 </span>
                 <span className="text-sm font-bold text-gray-400 font-mono leading-none">
