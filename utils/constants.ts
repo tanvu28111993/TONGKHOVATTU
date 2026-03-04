@@ -29,6 +29,16 @@ export const FULL_WIDTH_MENUS = [
     'PAPER_CALCULATION'
 ];
 
+export const NO_PADDING_MENUS = [
+    'OVERVIEW',
+    'LOCATIONS'
+];
+
+export const KEEP_ALIVE_MENUS = [
+    'OVERVIEW',
+    'LOCATIONS'
+];
+
 export const UI_CONFIG = {
   TABLE_ROW_HEIGHT: 36,
   SIDEBAR_WIDTH_COLLAPSED: 80, 

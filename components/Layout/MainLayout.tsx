@@ -5,7 +5,7 @@ import { Header } from './Header';
 import { ContentRouter } from './ContentRouter';
 import { MenuId } from '@/types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { FULL_WIDTH_MENUS } from '@/utils';
+import { FULL_WIDTH_MENUS, NO_PADDING_MENUS } from '@/utils';
 
 // MainLayout Responsibility (SRP):
 // 1. Structure the visual grid (Header, Sidebar, Content)
@@ -19,6 +19,7 @@ export const MainLayout: React.FC = () => {
 
   // Determine if current page requires Full Width (Expanded) mode
   const isFullWidthPage = FULL_WIDTH_MENUS.includes(currentMenu);
+  const isNoPaddingPage = NO_PADDING_MENUS.includes(currentMenu);
 
   const handleMenuChange = (id: MenuId) => {
     startTransition(() => {
@@ -71,8 +72,8 @@ export const MainLayout: React.FC = () => {
         > 
           {/* Main Container */}
           <main className={`
-            flex-1 flex flex-col ${isFullWidthPage ? 'p-4' : 'p-8'} mx-auto w-full h-full overflow-hidden
-            ${isFullWidthPage ? 'max-w-full' : 'max-w-7xl'}
+            flex-1 flex flex-col ${isNoPaddingPage ? 'p-0' : (isFullWidthPage ? 'p-4' : 'p-8')} mx-auto w-full h-full overflow-hidden
+            ${(isFullWidthPage || isNoPaddingPage) ? 'max-w-full' : 'max-w-7xl'}
           `}>
             <div className={`flex-1 flex flex-col h-full min-h-0 relative animate-fade-in transition-opacity duration-200 ${isPending ? 'opacity-70 pointer-events-none grayscale-[0.5]' : 'opacity-100'}`}>
               {/* Delegated Routing Logic to ContentRouter */}
