@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useAuth } from '../../contexts';
+import { useAuth } from '../../contexts/AuthContext';
 import { useBusinessLogic } from '../../hooks';
 import { DateTimeWidget } from './DateTimeWidget';
 import { CloudStatus } from './CloudStatus';

@@ -118,9 +118,9 @@ export const ReferenceManager: React.FC = () => {
                                     <X className="w-5 h-5" />
                                 </Button>
                              )}
-                            <Button type="submit" isLoading={isSubmitting} className={`h-11 px-6 shrink-0 ${isEditing ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700'}`}>
+                            <Button type="submit" disabled={isSubmitting} className={`h-11 px-6 shrink-0 ${isEditing ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700'}`}>
                                 {isEditing ? <Save className="w-5 h-5 mr-2" /> : <Plus className="w-5 h-5 mr-2" />} 
-                                {isEditing ? 'Lưu' : 'Thêm'}
+                                {isEditing ? 'Cập nhật' : 'Thêm'}
                             </Button>
                         </div>
                         </form>

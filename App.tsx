@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useAuth } from '@/contexts';
+import { useAuth } from '@/contexts/AuthContext';
 import { LoginScreen } from '@/components/Login/LoginScreen';
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { AppProviders } from '@/components/AppProviders';

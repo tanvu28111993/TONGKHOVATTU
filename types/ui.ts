@@ -1,10 +1,8 @@
 export type MenuId = 
   | 'OVERVIEW' 
-  | 'LOCATIONS' 
   | 'INVENTORY' 
   | 'REFERENCE'
   // New Menus
-  | 'MATERIAL_LOCATIONS' 
   | 'MATERIAL_INVENTORY' 
   | 'PAPER_CALCULATION'
   | 'EXPECTED_SCHEDULE';

@@ -21,6 +21,7 @@ interface CommandQueueContextType {
   queue: QueueCommand[];
   status: QueueStatus;
   lastSynced: Date | null;
+  syncNow: () => Promise<void>;
 }
 
 const CommandQueueContext = createContext<CommandQueueContextType | undefined>(undefined);
@@ -160,7 +161,7 @@ export const CommandQueueProvider: React.FC<{ children: ReactNode }> = ({ childr
   }, [queue, status, processQueueBatch]);
 
   return (
-    <CommandQueueContext.Provider value={{ addCommand, queue, status, lastSynced }}>
+    <CommandQueueContext.Provider value={{ addCommand, queue, status, lastSynced, syncNow: processQueueBatch }}>
       {children}
     </CommandQueueContext.Provider>
   );

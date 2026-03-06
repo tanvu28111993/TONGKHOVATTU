@@ -2,8 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { useMetaDataQuery } from './useMetaDataQuery';
 import { useToast } from '../contexts/ToastContext';
 import { useQueryClient } from '@tanstack/react-query';
-import { InventoryService } from '../services/inventory';
 import { CATEGORIES, CategoryKey } from '../utils/referenceConfig';
+import { useCommandQueue } from '../contexts/CommandQueueContext';
+import { QueueCommand } from '../types';
 
 export const useReferenceManagement = () => {
     const { data: metaData, isLoading } = useMetaDataQuery();
@@ -23,21 +24,41 @@ export const useReferenceManagement = () => {
 
     const { addToast } = useToast();
     const queryClient = useQueryClient();
+    const { addCommand, queue } = useCommandQueue();
 
     const currentConfig = CATEGORIES.find(c => c.key === selectedCategory)!;
     const currentData = metaData ? metaData[selectedCategory] : [];
 
     // Filter Data Logic
     const filteredData = useMemo(() => {
-        if (!currentData) return [];
+        let data = currentData ? [...currentData] : [];
+        
+        // Apply pending commands from Global Queue (Optimistic UI)
+        queue.forEach(cmd => {
+            if (cmd.type === 'METADATA_BATCH' && Array.isArray(cmd.payload)) {
+                cmd.payload.forEach((op: any) => {
+                    if (op.category !== selectedCategory) return;
+                    
+                    if (op.operation === 'ADD') {
+                        data.push([op.value, op.code, op.extra]);
+                    } else if (op.operation === 'UPDATE') {
+                        const idx = data.findIndex(row => row[0] === op.oldValue);
+                        if (idx !== -1) {
+                            data[idx] = [op.value, op.code, op.extra];
+                        }
+                    }
+                });
+            }
+        });
+
         const term = searchTerm.toLowerCase();
-        return currentData.filter(row => {
+        return data.filter(row => {
             const val = String(row[0] || '').toLowerCase();
             const code = String(row[1] || '').toLowerCase();
             const extra = String(row[2] || '').toLowerCase();
             return val.includes(term) || code.includes(term) || extra.includes(term);
         });
-    }, [currentData, searchTerm]);
+    }, [currentData, searchTerm, queue, selectedCategory]);
 
     const handleResetForm = () => {
         setNewValue('');
@@ -129,23 +150,38 @@ export const useReferenceManagement = () => {
 
         setIsSubmitting(true);
         try {
-            if (isEditing) {
-                await InventoryService.updateMetaData(
-                    selectedCategory, 
-                    'UPDATE', 
-                    newValue, 
-                    newCode, 
-                    newExtra, 
-                    editingId 
-                );
-                addToast('Đã cập nhật thành công', 'success');
-            } else {
-                await InventoryService.updateMetaData(selectedCategory, 'ADD', newValue, newCode, newExtra);
-                addToast('Đã thêm mới thành công', 'success');
-            }
+            // Construct payload for METADATA_BATCH
+            // Even for single item, we use batch structure for consistency if we want
+            // But CommandQueue handles 'METADATA_BATCH' type.
+            // We can wrap single operation in an array.
             
+            const operation = {
+                category: selectedCategory,
+                operation: isEditing ? 'UPDATE' : 'ADD',
+                value: newValue,
+                code: newCode,
+                extra: newExtra,
+                oldValue: isEditing ? editingId : undefined
+            };
+
+            const command: QueueCommand = {
+                id: `META-${Date.now()}`,
+                type: 'METADATA_BATCH',
+                payload: [operation], // Wrap in array
+                timestamp: Date.now(),
+                status: 'PENDING'
+            };
+
+            await addCommand(command);
+            
+            addToast(isEditing ? 'Đã thêm lệnh cập nhật vào hàng đợi' : 'Đã thêm lệnh thêm mới vào hàng đợi', 'success');
             handleResetForm();
-            queryClient.invalidateQueries({ queryKey: ['metadata'] });
+            
+            // Optimistic update or invalidate queries?
+            // Since it's async queue, invalidating immediately might not show changes yet.
+            // But we rely on the background sync to eventually update and then we can re-fetch.
+            // For now, just reset form.
+            
         } catch (error) {
             addToast('Lỗi thao tác: ' + (error as Error).message, 'error');
         } finally {

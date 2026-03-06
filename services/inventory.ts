@@ -86,5 +86,31 @@ export const InventoryService = {
        console.error("MetaData Update Error:", error);
        throw error;
     }
+  },
+
+  batchMetaData: async (operations: any[]) => {
+    try {
+      const response = await HttpService.post({
+        action: 'batch',
+        commands: [{
+            id: `META-${Date.now()}`,
+            type: 'METADATA_BATCH',
+            payload: operations
+        }]
+      });
+      const data = await response.json();
+      if (!data.success) {
+          throw new Error(data.message || 'Batch failed');
+      }
+      // Check individual results
+      if (data.results && data.results.some((r: any) => !r.success)) {
+          const failed = data.results.find((r: any) => !r.success);
+          throw new Error(failed.message || 'Batch operation failed');
+      }
+      return data;
+    } catch (error) {
+        console.error("MetaData Batch Error:", error);
+        throw error;
+    }
   }
 };

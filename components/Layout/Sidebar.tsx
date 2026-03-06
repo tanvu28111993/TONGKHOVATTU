@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useAuth } from '../../contexts';
+import { useAuth } from '../../contexts/AuthContext';
 import { MenuId, MenuItem } from '../../types';
 import { 
   LayoutDashboard, 
@@ -28,8 +28,6 @@ const MENU_ITEMS: MenuItem[] = [
   { id: 'OVERVIEW', label: 'TỔNG QUAN', icon: LayoutDashboard },
   
   // Group: Locations (Vị trí)
-  { id: 'LOCATIONS', label: 'VỊ TRÍ KHO GIẤY', icon: MapPin }, 
-  { id: 'MATERIAL_LOCATIONS', label: 'VỊ TRÍ KHO VẬT TƯ', icon: Map },
   { id: 'EXPECTED_SCHEDULE', label: 'LỊCH DỰ KIẾN', icon: Calendar },
   
   // Group: Inventory (Tồn kho)

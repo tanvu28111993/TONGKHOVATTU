@@ -41,16 +41,66 @@ export const SyncService = {
 
       console.log(`[SyncService] Processing ${queue.length} commands...`);
 
-      // Gửi Batch Request
-      const response = await HttpService.post({
-        action: 'batch',
-        commands: queue
-      });
+      const metaCommands = queue.filter((cmd: any) => cmd.type === 'METADATA_BATCH');
+      const batchCommands = queue.filter((cmd: any) => cmd.type !== 'METADATA_BATCH');
 
-      const result = await response.json();
+      // 1. Process Metadata Commands (Try Batch First)
+      if (metaCommands.length > 0) {
+          console.log(`[SyncService] Processing ${metaCommands.length} metadata commands...`);
+          const { InventoryService } = await import('./inventory');
 
-      if (!result.success) {
-        throw new Error(result.message || "Batch sync failed");
+          // Flatten all payloads
+          const allOperations = metaCommands.flatMap((cmd: any) => Array.isArray(cmd.payload) ? cmd.payload : []);
+          
+          if (allOperations.length > 0) {
+              try {
+                  console.log(`[SyncService] Sending Batch Metadata: ${allOperations.length} ops`);
+                  await InventoryService.batchMetaData(allOperations);
+              } catch (batchError) {
+                  console.warn("[SyncService] Batch Metadata failed, falling back to individual processing...", batchError);
+                  
+                  // Fallback: Process individually
+                  let hasError = false;
+                  for (const cmd of metaCommands) {
+                      if (Array.isArray(cmd.payload)) {
+                          for (const op of cmd.payload) {
+                              try {
+                                  await InventoryService.updateMetaData(
+                                      op.category,
+                                      op.operation,
+                                      op.value,
+                                      op.code,
+                                      op.extra,
+                                      op.oldValue
+                                  );
+                              } catch (singleError) {
+                                  console.error(`[SyncService] Individual Meta Op Failed: ${op.value}`, singleError);
+                                  hasError = true;
+                              }
+                          }
+                      }
+                  }
+                  
+                  if (hasError) {
+                      throw new Error("Some metadata operations failed even after fallback.");
+                  }
+              }
+          }
+      }
+
+      // 2. Process Batch Commands
+      if (batchCommands.length > 0) {
+          // Gửi Batch Request
+          const response = await HttpService.post({
+            action: 'batch',
+            commands: batchCommands
+          });
+
+          const result = await response.json();
+
+          if (!result.success) {
+            throw new Error(result.message || "Batch sync failed");
+          }
       }
 
       // Sync thành công -> Xóa queue

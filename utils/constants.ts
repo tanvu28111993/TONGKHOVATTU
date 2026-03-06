@@ -1,6 +1,6 @@
 
 // Cấu hình API
-const FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbzksG9x1T4cweYZyr7lYwKG7x0T2SoFHdvWVaCsweXWF1uYZ1g7hzGXNYm3RAHZkfLD/exec';
+const FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbzOBsC_L5Sz3vQKG0P3spojvcjP0axHNBuncioXXbS_wWYXSoCha6kmvEJDphHYbxz1/exec';
 
 let envUrl: string | undefined;
 try {
@@ -25,18 +25,16 @@ export const FULL_WIDTH_MENUS = [
     'INVENTORY', 
     'REFERENCE',
     'MATERIAL_INVENTORY',
-    'MATERIAL_LOCATIONS',
     'PAPER_CALCULATION'
 ];
 
 export const NO_PADDING_MENUS = [
     'OVERVIEW',
-    'LOCATIONS'
+    'EXPECTED_SCHEDULE'
 ];
 
 export const KEEP_ALIVE_MENUS = [
-    'OVERVIEW',
-    'LOCATIONS'
+    'OVERVIEW'
 ];
 
 export const UI_CONFIG = {

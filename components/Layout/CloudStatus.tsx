@@ -19,8 +19,14 @@ const CloudIcon = ({ className }: { className?: string }) => (
 );
 
 export const CloudStatus: React.FC = () => {
-  const { status, queue } = useCommandQueue();
+  const { status, queue, syncNow } = useCommandQueue();
   const baseIconClass = "w-8 h-8 transition-all duration-500 ease-in-out"; 
+
+  const handleSyncClick = () => {
+      if (queue.length > 0 && status !== 'SYNCING') {
+          syncNow();
+      }
+  };
 
   switch (status) {
     case 'SYNCING':
@@ -48,7 +54,11 @@ export const CloudStatus: React.FC = () => {
 
     case 'ERROR':
       return (
-        <div className="relative group cursor-help" title="Lỗi kết nối máy chủ">
+        <div 
+            className="relative group cursor-pointer" 
+            title="Lỗi kết nối. Nhấn để thử lại."
+            onClick={handleSyncClick}
+        >
           <CloudIcon className={`${baseIconClass} text-red-500 fill-red-500/10 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]`} />
           <div className="absolute -bottom-1 -right-1 bg-slate-900 rounded-full border border-red-500/50 p-[1px] shadow-sm">
              <AlertCircle className="w-3.5 h-3.5 text-red-500" />
@@ -58,7 +68,11 @@ export const CloudStatus: React.FC = () => {
 
     case 'PENDING':
       return (
-        <div className="relative group cursor-help" title={`Đang chờ gửi: ${queue.length} lệnh`}>
+        <div 
+            className="relative group cursor-pointer hover:scale-110 transition-transform" 
+            title={`Đang chờ gửi: ${queue.length} lệnh. Nhấn để gửi ngay.`}
+            onClick={handleSyncClick}
+        >
           <CloudIcon className={`${baseIconClass} text-amber-400 fill-amber-400/10 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]`} />
           <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] text-[10px] font-bold text-slate-900 bg-amber-400 rounded-full border-2 border-slate-900 shadow-sm">
             {queue.length}

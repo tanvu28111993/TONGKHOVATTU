@@ -1,9 +1,11 @@
 
 import { InventoryItem, WorkerAction, WorkerResponse } from '../types';
 import { WORKER_CODE } from '../workers/inventory.worker';
+import { SCHEDULE_WORKER_CODE } from '../workers/schedule.worker';
 
 // Cache Blob URL to prevent memory leaks
 let workerBlobUrl: string | null = null;
+let scheduleWorkerBlobUrl: string | null = null;
 
 export const createWorker = (): Worker => {
   try {
@@ -14,6 +16,19 @@ export const createWorker = (): Worker => {
     return new Worker(workerBlobUrl);
   } catch (e) {
     console.error("Critical: Failed to create worker instance", e);
+    throw e;
+  }
+};
+
+export const createScheduleWorker = (): Worker => {
+  try {
+    if (!scheduleWorkerBlobUrl) {
+        const blob = new Blob([SCHEDULE_WORKER_CODE], { type: 'application/javascript' });
+        scheduleWorkerBlobUrl = URL.createObjectURL(blob);
+    }
+    return new Worker(scheduleWorkerBlobUrl);
+  } catch (e) {
+    console.error("Critical: Failed to create schedule worker instance", e);
     throw e;
   }
 };
@@ -51,6 +66,7 @@ const decodeWorkerResponse = (data: WorkerResponse) => {
 
 export const WorkerService = {
   createWorker,
+  createScheduleWorker,
 
   transformData: (rawData: any[][]): Promise<InventoryItem[]> => {
     return new Promise((resolve, reject) => {

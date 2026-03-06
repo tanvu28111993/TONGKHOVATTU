@@ -1,7 +1,7 @@
 
 import { Tag, Box, FileText, Truck, Factory } from 'lucide-react';
 
-export type CategoryKey = 'loaiNhap' | 'kienGiay' | 'loaiGiay' | 'ncc' | 'nsx';
+export type CategoryKey = 'loaiNhap' | 'kienGiay' | 'loaiGiay' | 'loaiVt' | 'ncc' | 'nsx';
 
 export interface CategoryConfig {
     key: CategoryKey;
@@ -22,6 +22,13 @@ export const CATEGORIES: CategoryConfig[] = [
         fields: [
             { key: 'value', label: 'Tên Mục Đích', placeholder: 'Ví dụ: SẢN XUẤT...', width: '40%' },
             { key: 'code', label: 'Mã Viết Tắt', placeholder: 'SX', width: '20%', readOnly: true }
+        ]
+    },
+    { 
+        key: 'loaiVt', label: 'Loại Vật Tư', icon: Tag,
+        fields: [
+            { key: 'value', label: 'Loại Vật tư', placeholder: 'Ví dụ: GIẤY...', width: '40%' },
+            { key: 'code', label: 'MÃ', placeholder: 'GY', width: '20%', readOnly: true }
         ]
     },
     { 

@@ -3,6 +3,7 @@
 var ID_SHEET_DANG_NHAP = "1tjkaHslFfyfeDG6Vf4Ywe12demDjnrFxOyqELy7fLB8"; // Updated Login Sheet
 var ID_SHEET_KHO = "1DSg_2nJoPkAfudCy4QnHBEbvKhwHm-j6Cd9CK_cwfkg";
 var ID_SHEET_DANHMUC = "1mn8QLCcgmCUKKckGXIyRcghDnPPtBAgjuGsVLJaDTF4"; 
+var ID_SHEET_LICH = "11FIvb9hXe98TYOg6X4REjQyrgzdLOBfXOCM-gLIUVdA";
 
 // External History Sheets (Giữ lại để ghi lịch sử nếu cần thiết trong tương lai)
 var ID_SHEET_XUAT = "1ztt84ZUrGk1NlhjmbdAIm6tjlGHZBRDMPgOEQi24CUw";
@@ -29,41 +30,52 @@ function getParams(e) {
 }
 
 function doGet(e) {
-  var params = getParams(e);
-  return routeRequest(params);
+  try {
+    var params = getParams(e);
+    return routeRequest(params);
+  } catch (err) {
+    return responseJSON({ error: "Global Error: " + err.message });
+  }
 }
 
 function doPost(e) {
-  var params = getParams(e);
-  var action = params.action;
+  try {
+    var params = getParams(e);
+    var action = params.action;
 
-  // --- OPTIMIZATION: SEPARATE READ/WRITE LOGIC (CQRS) ---
-  if (action === 'batch') {
-      var lock = LockService.getScriptLock();
-      try {
-        lock.waitLock(30000);
-        return handleBatch(params);
-      } catch (e) {
-        return responseJSON({ success: false, message: "Server Busy. Try again later." });
-      } finally {
-        lock.releaseLock();
-      }
+    // --- OPTIMIZATION: SEPARATE READ/WRITE LOGIC (CQRS) ---
+    if (action === 'batch') {
+        var lock = LockService.getScriptLock();
+        try {
+          lock.waitLock(30000);
+          return handleBatch(params);
+        } catch (e) {
+          return responseJSON({ success: false, message: "Server Busy. Try again later." });
+        } finally {
+          lock.releaseLock();
+        }
+    }
+
+    return routeRequest(params);
+  } catch (err) {
+    return responseJSON({ error: "Global Error: " + err.message });
   }
-
-  return routeRequest(params);
 }
 
 // Router điều hướng request
 function routeRequest(params) {
-  var action = params.action;
+  var action = params.action ? String(params.action).trim() : "";
+  
   if (action == 'login') return handleLogin(params);
   if (action == 'getInventory') return handleGetInventory(params);
   if (action == 'getHistory') return handleGetHistory(params); 
   if (action == 'getMetaData') return handleGetMetaData(); 
   if (action == 'updateMetaData') return handleUpdateMetaData(params);
   if (action == 'checkVersion') return handleCheckVersion();
+  if (action == 'getSchedule') return handleGetSchedule();
+  if (action == 'saveSchedule') return handleSaveSchedule(params);
   
-  return responseJSON({ error: "Invalid action" });
+  return responseJSON({ error: "Invalid action: " + action });
 }
 
 function handleGetMetaData() {
@@ -72,6 +84,20 @@ function handleGetMetaData() {
     
     var readSheet = function(sheetName, numCols) {
       var sheet = ss.getSheetByName(sheetName);
+      
+      // Fallback: Case-insensitive and space-insensitive search
+      if (!sheet) {
+          var sheets = ss.getSheets();
+          for (var i = 0; i < sheets.length; i++) {
+              var name = sheets[i].getName();
+              // Normalize: Remove spaces, uppercase
+              if (name.toUpperCase().replace(/\s/g, '') === sheetName.toUpperCase().replace(/\s/g, '')) {
+                  sheet = sheets[i];
+                  break;
+              }
+          }
+      }
+
       if (!sheet) return [];
       var lastRow = sheet.getLastRow();
       if (lastRow < 2) return []; 
@@ -79,12 +105,17 @@ function handleGetMetaData() {
       return data.filter(function(row) { return row[0] && String(row[0]).trim() !== ""; });
     };
 
+    // Debug: List all sheet names
+    var allSheetNames = ss.getSheets().map(function(s) { return s.getName(); });
+
     var data = {
       loaiNhap: readSheet("LOAINHAP", 2),
       kienGiay: readSheet("KIENGIAY", 2),
-      loaiGiay: readSheet("GIAY", 2),    
-      ncc: readSheet("NCC2", 3), // NCC2 đọc 3 cột
-      nsx: readSheet("NSX", 1)           
+      loaiGiay: readSheet("GIAY", 2),
+      loaiVt: readSheet("LOAIVT", 2), 
+      ncc: readSheet("NCC2", 3), 
+      nsx: readSheet("NSX", 1),
+      debugSheets: allSheetNames // Return list of sheets for debugging
     };
 
     return responseJSON({ success: true, data: data });
@@ -119,6 +150,7 @@ function handleUpdateMetaData(params) {
             case 'loaiNhap': sheetName = "LOAINHAP"; numCols = 2; break;
             case 'kienGiay': sheetName = "KIENGIAY"; numCols = 2; break;
             case 'loaiGiay': sheetName = "GIAY"; numCols = 2; break;
+            case 'loaiVt': sheetName = "LOAIVT"; numCols = 2; break;
             case 'ncc': sheetName = "NCC2"; numCols = 3; break; 
             case 'nsx': sheetName = "NSX"; numCols = 1; break;
             default: return responseJSON({ success: false, message: "Invalid category" });
@@ -251,6 +283,119 @@ function handleBatch(params) {
          } else {
              results.push({ id: cmd.id, success: false, message: "SKU not found: " + item.sku });
          }
+
+      } else if (cmd.type === 'SAVE_SCHEDULE') {
+          var items = cmd.payload;
+          if (!items) {
+             results.push({ id: cmd.id, success: false, message: "No payload" });
+          } else {
+             var result = processSaveSchedule(Array.isArray(items) ? items : [items]);
+             if (result.success) {
+                 results.push({ id: cmd.id, success: true });
+             } else {
+                 results.push({ id: cmd.id, success: false, message: result.message });
+             }
+          }
+
+      } else if (cmd.type === 'METADATA_BATCH') {
+           var operations = cmd.payload;
+           if (!operations || !Array.isArray(operations)) {
+               results.push({ id: cmd.id, success: false, message: "Invalid payload" });
+           } else {
+               var errors = [];
+               var ssDanhMuc = SpreadsheetApp.openById(ID_SHEET_DANHMUC);
+               
+               operations.forEach(function(op) {
+                   try {
+                       var category = op.category; 
+                       var operation = op.operation; 
+                       var value = op.value;         
+                       var oldValue = op.oldValue;   
+                       var code = op.code || ""; 
+                       var extra = op.extra || ""; 
+
+                       if (!category || !operation || !value) {
+                           errors.push("Missing params for " + value);
+                           return;
+                       }
+
+                       var sheetName = "";
+                       var numCols = 1;
+
+                       switch (category) {
+                           case 'loaiNhap': sheetName = "LOAINHAP"; numCols = 2; break;
+                           case 'kienGiay': sheetName = "KIENGIAY"; numCols = 2; break;
+                           case 'loaiGiay': sheetName = "GIAY"; numCols = 2; break;
+                           case 'loaiVt': sheetName = "LOAIVT"; numCols = 2; break;
+                           case 'ncc': sheetName = "NCC2"; numCols = 3; break; 
+                           case 'nsx': sheetName = "NSX"; numCols = 1; break;
+                           default: 
+                               errors.push("Invalid category: " + category);
+                               return;
+                       }
+
+                       var sheet = ssDanhMuc.getSheetByName(sheetName);
+                       // Fallback search
+                       if (!sheet) {
+                          var sheets = ssDanhMuc.getSheets();
+                          for (var i = 0; i < sheets.length; i++) {
+                              if (sheets[i].getName().toUpperCase().replace(/\s/g, '') === sheetName.toUpperCase().replace(/\s/g, '')) {
+                                  sheet = sheets[i];
+                                  break;
+                              }
+                          }
+                       }
+
+                       if (!sheet) {
+                           errors.push("Sheet not found: " + sheetName);
+                           return;
+                       }
+
+                       if (operation === 'ADD') {
+                           if (numCols === 3) {
+                                sheet.appendRow([value, code, extra]);
+                           } else if (numCols === 2) {
+                               sheet.appendRow([value, code]);
+                           } else {
+                               sheet.appendRow([value]);
+                           }
+                       } else if (operation === 'UPDATE') {
+                            var targetValue = oldValue || value; 
+                            var lastRow = sheet.getLastRow();
+                            if (lastRow >= 2) {
+                                var data = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+                                var rowToUpdate = -1;
+                                for (var i = 0; i < data.length; i++) {
+                                    if (String(data[i][0]) === String(targetValue)) {
+                                        rowToUpdate = i + 2;
+                                        break;
+                                    }
+                                }
+                                
+                                if (rowToUpdate !== -1) {
+                                    if (numCols === 3) {
+                                        sheet.getRange(rowToUpdate, 1, 1, 3).setValues([[value, code, extra]]);
+                                    } else if (numCols === 2) {
+                                        sheet.getRange(rowToUpdate, 1, 1, 2).setValues([[value, code]]);
+                                    } else {
+                                        sheet.getRange(rowToUpdate, 1, 1, 1).setValues([[value]]);
+                                    }
+                                } else {
+                                    errors.push("Item not found to update: " + targetValue);
+                                }
+                            }
+                       }
+                   } catch(e) {
+                       errors.push("Op error: " + e.message);
+                   }
+               });
+               
+               if (errors.length > 0) {
+                   results.push({ id: cmd.id, success: false, message: errors.join('; ') });
+               } else {
+                   results.push({ id: cmd.id, success: true });
+               }
+           }
 
       } else {
          results.push({ id: cmd.id, success: true, message: "No-op or Unsupported in this version" });
@@ -552,6 +697,148 @@ function handleGetInventory(params) {
     data: optimizedData,
     cached: isFromCache 
   });
+}
+
+function handleGetSchedule() {
+  try {
+    var ss = SpreadsheetApp.openById(ID_SHEET_LICH);
+    var sheet = ss.getSheetByName("LICH");
+    if (!sheet) return responseJSON({ success: true, data: [] });
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return responseJSON({ success: true, data: [] });
+
+    // Read column A only
+    var data = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    var scheduleItems = [];
+
+    for (var i = 0; i < data.length; i++) {
+      var raw = String(data[i][0]);
+      if (!raw) continue;
+      
+      var parts = raw.split('|');
+      // id|materialType|purchaseDate|purchaseOrder|supplierCode|supplierName|materialName|orderCustomer|gsm|rollWidth|length|width|quantity|unit|expectedArrivalDate|packetType|paperType|manufacturer|importer|updatedAt
+      
+      if (parts.length < 1) continue;
+
+      var item = {
+        id: parts[0] || "",
+        materialType: parts[1] || "",
+        purchaseDate: parts[2] || "",
+        purchaseOrder: parts[3] || "",
+        supplierCode: parts[4] || "",
+        supplierName: parts[5] || "",
+        materialName: parts[6] || "",
+        orderCustomer: parts[7] || "",
+        gsm: Number(parts[8]) || 0,
+        rollWidth: Number(parts[9]) || 0,
+        length: Number(parts[10]) || 0,
+        width: Number(parts[11]) || 0,
+        quantity: Number(parts[12]) || 0,
+        unit: parts[13] || "",
+        expectedArrivalDate: parts[14] || "",
+        packetType: parts[15] || "",
+        paperType: parts[16] || "",
+        manufacturer: parts[17] || "",
+        importer: parts[18] || "",
+        updatedAt: parts[19] || ""
+      };
+      scheduleItems.push(item);
+    }
+
+    return responseJSON({ success: true, data: scheduleItems });
+  } catch (e) {
+    return responseJSON({ success: false, message: e.message });
+  }
+}
+
+function handleSaveSchedule(params) {
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(30000);
+    var data = params.data;
+    
+    // If item is a string (JSON), parse it
+    if (typeof data === 'string') {
+        try {
+            data = JSON.parse(data);
+        } catch(e) {}
+    }
+    
+    if (!data) return responseJSON({ success: false, message: "No data provided" });
+
+    var items = Array.isArray(data) ? data : [data];
+    var result = processSaveSchedule(items);
+
+    return responseJSON(result);
+  } catch (e) {
+    return responseJSON({ success: false, message: e.message });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function processSaveSchedule(items) {
+    if (!items || items.length === 0) return { success: false, message: "No data provided" };
+
+    var ss = SpreadsheetApp.openById(ID_SHEET_LICH);
+    var sheet = ss.getSheetByName("LICH");
+    if (!sheet) {
+        sheet = ss.insertSheet("LICH");
+        sheet.appendRow(["Data (Column A)"]); 
+    }
+
+    var lastRow = sheet.getLastRow();
+    var existingIds = {}; // Map ID -> Row Index
+    if (lastRow >= 2) {
+        var data = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+        for (var i = 0; i < data.length; i++) {
+            var rowStr = String(data[i][0]);
+            var id = rowStr.split('|')[0];
+            if (id) existingIds[id] = i + 2; // Row index (1-based)
+        }
+    }
+
+    var rowsToAdd = [];
+    
+    items.forEach(function(item) {
+        var parts = [
+            item.id || "",
+            item.materialType || "",
+            item.purchaseDate || "",
+            item.purchaseOrder || "",
+            item.supplierCode || "",
+            item.supplierName || "",
+            item.materialName || "",
+            item.orderCustomer || "",
+            item.gsm || 0,
+            item.rollWidth || 0,
+            item.length || 0,
+            item.width || 0,
+            item.quantity || 0,
+            item.unit || "",
+            item.expectedArrivalDate || "",
+            item.packetType || "",
+            item.paperType || "",
+            item.manufacturer || "",
+            item.importer || "",
+            item.updatedAt || ""
+        ];
+        var rowStr = parts.join('|');
+
+        if (existingIds[item.id]) {
+            // Update existing row
+            sheet.getRange(existingIds[item.id], 1).setValue(rowStr);
+        } else {
+            // Append new row
+            rowsToAdd.push([rowStr]);
+        }
+    });
+
+    if (rowsToAdd.length > 0) {
+        sheet.getRange(sheet.getLastRow() + 1, 1, rowsToAdd.length, 1).setValues(rowsToAdd);
+    }
+    return { success: true };
 }
 
 function responseJSON(data) {
