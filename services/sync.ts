@@ -44,7 +44,7 @@ export const SyncService = {
       const metaCommands = queue.filter((cmd: any) => cmd.type === 'METADATA_BATCH');
       const batchCommands = queue.filter((cmd: any) => cmd.type !== 'METADATA_BATCH');
 
-      // 1. Process Metadata Commands (Try Batch First)
+      // 1. Process Metadata Commands (Force Individual Processing)
       if (metaCommands.length > 0) {
           console.log(`[SyncService] Processing ${metaCommands.length} metadata commands...`);
           const { InventoryService } = await import('./inventory');
@@ -53,37 +53,27 @@ export const SyncService = {
           const allOperations = metaCommands.flatMap((cmd: any) => Array.isArray(cmd.payload) ? cmd.payload : []);
           
           if (allOperations.length > 0) {
-              try {
-                  console.log(`[SyncService] Sending Batch Metadata: ${allOperations.length} ops`);
-                  await InventoryService.batchMetaData(allOperations);
-              } catch (batchError) {
-                  console.warn("[SyncService] Batch Metadata failed, falling back to individual processing...", batchError);
-                  
-                  // Fallback: Process individually
-                  let hasError = false;
-                  for (const cmd of metaCommands) {
-                      if (Array.isArray(cmd.payload)) {
-                          for (const op of cmd.payload) {
-                              try {
-                                  await InventoryService.updateMetaData(
-                                      op.category,
-                                      op.operation,
-                                      op.value,
-                                      op.code,
-                                      op.extra,
-                                      op.oldValue
-                                  );
-                              } catch (singleError) {
-                                  console.error(`[SyncService] Individual Meta Op Failed: ${op.value}`, singleError);
-                                  hasError = true;
-                              }
-                          }
-                      }
+              // Process individually to ensure reliability with current backend
+              let hasError = false;
+              for (const op of allOperations) {
+                  try {
+                      console.log(`[SyncService] Processing Meta Op: ${op.operation} ${op.value}`);
+                      await InventoryService.updateMetaData(
+                          op.category,
+                          op.operation,
+                          op.value,
+                          op.code,
+                          op.extra,
+                          op.oldValue
+                      );
+                  } catch (singleError) {
+                      console.error(`[SyncService] Individual Meta Op Failed: ${op.value}`, singleError);
+                      hasError = true;
                   }
-                  
-                  if (hasError) {
-                      throw new Error("Some metadata operations failed even after fallback.");
-                  }
+              }
+              
+              if (hasError) {
+                  throw new Error("Some metadata operations failed.");
               }
           }
       }

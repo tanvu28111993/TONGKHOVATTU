@@ -48,23 +48,28 @@ export const ContentRouter: React.FC<ContentRouterProps> = React.memo(({ current
 
   return (
     <>
-      {/* Persistent Views (PowerBI Dashboards) - Mounted on first visit, hidden when inactive */}
-      {(visitedMenus.has('OVERVIEW') || currentMenu === 'OVERVIEW') && (
-        <div className={currentMenu === 'OVERVIEW' ? 'h-full' : 'hidden'}>
-          <Suspense fallback={<ModuleLoader />}>
-            <Overview />
-          </Suspense>
-        </div>
-      )}
+      {Array.from(visitedMenus).map(menuId => {
+        const Component = ROUTE_COMPONENTS[menuId];
+        if (!Component) return null;
 
-      {/* Standard Views - Mounted only when active */}
-      {!KEEP_ALIVE_MENUS.includes(currentMenu) && (
-        <Suspense fallback={<ModuleLoader />}>
-          <ErrorBoundary resetKey={currentMenu}>
-            {Component ? <Component /> : null}
-          </ErrorBoundary>
-        </Suspense>
-      )}
+        // Determine visibility
+        const isActive = currentMenu === menuId;
+
+        return (
+          <div 
+            key={menuId} 
+            className={isActive ? 'h-full flex-1 flex flex-col min-h-0' : 'hidden'}
+            // Optimization: Use content-visibility to skip rendering work when hidden
+            style={!isActive ? { contentVisibility: 'hidden' } : undefined}
+          >
+            <Suspense fallback={<ModuleLoader />}>
+              <ErrorBoundary resetKey={menuId}>
+                <Component />
+              </ErrorBoundary>
+            </Suspense>
+          </div>
+        );
+      })}
     </>
   );
 });

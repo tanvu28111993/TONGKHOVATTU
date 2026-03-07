@@ -62,8 +62,18 @@ export const ExpectedSchedule: React.FC = () => {
       setIsEditModalOpen(true);
   };
 
-  const handleUpdateItem = (updatedItem: ScheduleItem) => {
-      setData(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
+  const handleUpdateItem = (updatedItem: ScheduleItem & { oldId?: string }) => {
+      setData(prev => prev.map(item => {
+          // If ID changed (LVT -> LVTS), we match by oldId
+          if (updatedItem.oldId && item.id === updatedItem.oldId) {
+              return updatedItem;
+          }
+          // Normal update
+          if (item.id === updatedItem.id) {
+              return updatedItem;
+          }
+          return item;
+      }));
       addToast("Cập nhật thành công!", "success");
   };
 

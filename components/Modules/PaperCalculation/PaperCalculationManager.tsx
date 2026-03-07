@@ -223,7 +223,7 @@ export const PaperCalculationManager: React.FC = () => {
   return (
     <div className="flex flex-col xl:flex-row-reverse gap-6 h-full animate-fade-in">
       {/* INPUT COLUMN */}
-      <Card className="w-full xl:w-[20%] flex flex-col gap-5 h-fit border-t-4 border-t-brand-red shadow-2xl sticky top-4">
+      <Card className="w-full xl:w-[20%] flex flex-col gap-5 h-fit max-h-[calc(100vh-6rem)] overflow-y-auto custom-scrollbar border-t-4 border-t-brand-red shadow-2xl sticky top-4 pb-6">
          <div className="flex items-start justify-between">
             <div>
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">

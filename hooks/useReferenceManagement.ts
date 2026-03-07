@@ -10,6 +10,15 @@ export const useReferenceManagement = () => {
     const { data: metaData, isLoading } = useMetaDataQuery();
     const [selectedCategory, setSelectedCategory] = useState<CategoryKey>('loaiNhap');
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+    // Debounce Search Term
+    React.useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
     
     // Form States
     const [newValue, setNewValue] = useState(''); // Maps to Field 1 (value) / Row[0]
@@ -51,14 +60,14 @@ export const useReferenceManagement = () => {
             }
         });
 
-        const term = searchTerm.toLowerCase();
+        const term = debouncedSearchTerm.toLowerCase();
         return data.filter(row => {
             const val = String(row[0] || '').toLowerCase();
             const code = String(row[1] || '').toLowerCase();
             const extra = String(row[2] || '').toLowerCase();
             return val.includes(term) || code.includes(term) || extra.includes(term);
         });
-    }, [currentData, searchTerm, queue, selectedCategory]);
+    }, [currentData, debouncedSearchTerm, queue, selectedCategory]);
 
     const handleResetForm = () => {
         setNewValue('');

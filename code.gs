@@ -800,6 +800,7 @@ function processSaveSchedule(items) {
     }
 
     var rowsToAdd = [];
+    var rowsToDelete = [];
     
     items.forEach(function(item) {
         var parts = [
@@ -826,18 +827,47 @@ function processSaveSchedule(items) {
         ];
         var rowStr = parts.join('|');
 
-        if (existingIds[item.id]) {
-            // Update existing row
-            sheet.getRange(existingIds[item.id], 1).setValue(rowStr);
-        } else {
-            // Append new row
+        // Check if we are updating an existing ID OR renaming an old ID
+        var targetRowIndex = existingIds[item.id];
+        
+        // Support for ID change (Renaming) -> Delete Old, Append New
+        if (!targetRowIndex && item.oldId && existingIds[item.oldId]) {
+            rowsToDelete.push(existingIds[item.oldId]);
             rowsToAdd.push([rowStr]);
+            
+            // Remove from map to prevent double processing
+            delete existingIds[item.oldId];
+        } 
+        // Update existing row
+        else if (targetRowIndex) {
+            sheet.getRange(targetRowIndex, 1).setValue(rowStr);
+        } 
+        // Append new row
+        else {
+            rowsToAdd.push([rowStr]);
+            // Update map for subsequent items in this batch
+            existingIds[item.id] = sheet.getLastRow() + rowsToAdd.length + 1; 
         }
     });
 
+    // Process Deletions (Sort Descending to avoid index shifting issues)
+    if (rowsToDelete.length > 0) {
+        // Unique and Sort Descending
+        var uniqueRows = rowsToDelete.filter(function(item, pos) {
+            return rowsToDelete.indexOf(item) == pos;
+        });
+        uniqueRows.sort(function(a, b){return b-a});
+        
+        uniqueRows.forEach(function(rowIndex) {
+            sheet.deleteRow(rowIndex);
+        });
+    }
+
+    // Process Additions
     if (rowsToAdd.length > 0) {
         sheet.getRange(sheet.getLastRow() + 1, 1, rowsToAdd.length, 1).setValues(rowsToAdd);
     }
+    
     return { success: true };
 }
 

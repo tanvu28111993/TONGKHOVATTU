@@ -34,17 +34,22 @@ const getScheduleStatus = (dateStr: string) => {
     // Quá hạn: Ngày dự kiến < Ngày hiện tại (diffDays < 0)
     // Sắp về: 0 <= diffDays <= 4
     
-    if (diffDays < 0) return { label: 'Quá hạn', color: 'text-orange-500 font-bold' };
-    if (diffDays >= 0 && diffDays <= 4) return { label: 'Sắp về', color: 'text-brand-purple font-bold' };
+    if (diffDays < 0) return { label: 'Quá hạn', color: 'text-orange-500 font-extrabold' };
+    if (diffDays >= 0 && diffDays <= 4) return { label: 'Sắp về', color: 'text-brand-purple font-extrabold' };
     
-    return { label: '', color: 'text-gray-300 font-bold' };
+    return { label: '', color: 'text-gray-300 font-extrabold' };
 };
 
 export const getScheduleRowStyle = (item: ScheduleItem) => {
+    // Priority: LVTS prefix -> Red color
+    if (item.id && item.id.startsWith('LVTS-')) {
+        return 'text-[#DA291C] font-extrabold';
+    }
+
     const status = getScheduleStatus(item.expectedArrivalDate);
-    if (status.label === 'Quá hạn') return 'text-orange-500 font-bold';
-    if (status.label === 'Sắp về') return 'text-brand-purple font-bold';
-    return 'text-gray-300 font-bold';
+    if (status.label === 'Quá hạn') return 'text-orange-500 font-extrabold';
+    if (status.label === 'Sắp về') return 'text-brand-purple font-extrabold';
+    return 'text-gray-300 font-extrabold';
 };
 
 export const SCHEDULE_COLUMNS: ColumnConfig<ScheduleItem>[] = [
@@ -84,6 +89,9 @@ export const SCHEDULE_COLUMNS: ColumnConfig<ScheduleItem>[] = [
         accessor: 'expectedArrivalDate', // Use date to calculate status
         width: 150,
         format: (val) => getScheduleStatus(val).label,
-        getCellStyle: (item) => getScheduleStatus(item.expectedArrivalDate).color
+        getCellStyle: (item) => {
+             if (item.id && item.id.startsWith('LVTS-')) return 'text-[#DA291C] font-extrabold';
+             return getScheduleStatus(item.expectedArrivalDate).color;
+        }
     }
 ];

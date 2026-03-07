@@ -51,39 +51,29 @@ export const EditScheduleModal: React.FC<EditScheduleModalProps> = ({
   const handleSave = async () => {
       if (!user) return;
 
-      const updatedItem: ScheduleItem = {
+      let newId = item.id;
+      let oldId = undefined;
+
+      // Check if ID needs to be updated (LVT -> LVTS)
+      if (item.id.startsWith('LVT-')) {
+          newId = item.id.replace('LVT-', 'LVTS-');
+          oldId = item.id;
+      }
+
+      const updatedItem: ScheduleItem & { oldId?: string } = {
           ...item,
-          expectedArrivalDate: expectedDate, // Keep as YYYY-MM-DD for consistency? Or format back to DD/MM/YYYY? 
-          // The system seems to use YYYY-MM-DD internally based on ImportModal logic.
-          // But display format is DD/MM/YYYY.
-          // Let's store as YYYY-MM-DD.
+          id: newId,
+          expectedArrivalDate: expectedDate, 
           importer: user.username,
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
+          oldId: oldId
       };
 
       // Create command to save to server
       const command: QueueCommand = {
           id: `CMD-UPD-${Date.now()}`,
-          type: 'SAVE_SCHEDULE', // Reusing SAVE_SCHEDULE which handles array of items. 
-          // If backend supports updating single item by ID, great. 
-          // The current backend implementation of SAVE_SCHEDULE appends rows.
-          // Wait, the backend implementation of SAVE_SCHEDULE appends rows. It does NOT update existing rows.
-          // We need to check backend code.
-          // Step 47 shows handleSaveSchedule calls processSaveSchedule which APPENDS rows.
-          // It does NOT update.
-          // We need to implement UPDATE_SCHEDULE in backend or modify SAVE_SCHEDULE to handle updates.
-          // For now, let's assume we need to fix backend too or just append a new row representing the update?
-          // No, that would duplicate data.
-          // The user request implies updating the row.
-          // I will need to update the backend to support UPDATE_SCHEDULE or modify SAVE_SCHEDULE.
-          // Let's check backend code again.
-          
-          // Backend `handleSaveSchedule` -> `processSaveSchedule` -> `sheet.appendRow`.
-          // It definitely appends.
-          
-          // I should add a new command type UPDATE_SCHEDULE_ITEM or similar.
-          // But first let's finish the frontend modal.
-          payload: [updatedItem], // Sending as array
+          type: 'SAVE_SCHEDULE', 
+          payload: [updatedItem], 
           timestamp: Date.now(),
           status: 'PENDING'
       };

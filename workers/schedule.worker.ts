@@ -174,12 +174,42 @@ self.onmessage = (e) => {
 
         if (searchColumn === 'all') {
           return searchTerms.every((term) => 
-            Object.values(item).some((val) =>
-              normalize(val).includes(term)
-            )
+            Object.entries(item).some(([key, val]) => {
+              const normalizedVal = normalize(val);
+              if (normalizedVal.includes(term)) return true;
+              
+              // Check formatted date for date columns (YYYY-MM-DD -> DD/MM/YYYY)
+              if (['purchaseDate', 'expectedArrivalDate'].includes(key) && val) {
+                  try {
+                      const d = new Date(val);
+                      if (!isNaN(d.getTime())) {
+                          const day = String(d.getDate()).padStart(2, '0');
+                          const month = String(d.getMonth() + 1).padStart(2, '0');
+                          const year = d.getFullYear();
+                          const formatted = day + '/' + month + '/' + year;
+                          if (formatted.includes(term)) return true;
+                      }
+                  } catch (e) {}
+              }
+              return false;
+            })
           );
         } else {
-          const value = normalize(item[searchColumn]);
+          let value = normalize(item[searchColumn]);
+          
+          // Special handling for date columns in specific column search
+          if (['purchaseDate', 'expectedArrivalDate'].includes(searchColumn) && item[searchColumn]) {
+              try {
+                  const d = new Date(item[searchColumn]);
+                  if (!isNaN(d.getTime())) {
+                      const day = String(d.getDate()).padStart(2, '0');
+                      const month = String(d.getMonth() + 1).padStart(2, '0');
+                      const year = d.getFullYear();
+                      value = day + '/' + month + '/' + year;
+                  }
+              } catch (e) {}
+          }
+          
           return searchTerms.every((term) => value.includes(term));
         }
       });
