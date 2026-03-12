@@ -1,5 +1,6 @@
 import { ScheduleItem } from '../types';
 import { ColumnConfig } from '../types/ui';
+import { formatDateTime } from './formatting';
 
 const numberFormatter = new Intl.NumberFormat('vi-VN');
 const formatNumber = (val: any) => {
@@ -78,7 +79,9 @@ export const SCHEDULE_COLUMNS: ColumnConfig<ScheduleItem>[] = [
         format: (val) => {
             if (!val) return '';
             try {
-                return new Date(val).toLocaleString('vi-VN');
+                const d = new Date(val);
+                if (isNaN(d.getTime())) return val;
+                return formatDateTime(d);
             } catch {
                 return val;
             }

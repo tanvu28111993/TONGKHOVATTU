@@ -63,10 +63,20 @@ export const ExpectedScheduleToolbar: React.FC<ExpectedScheduleToolbarProps> = (
   return (
     <Card className="flex flex-col gap-4">
       <div className="flex flex-col xl:flex-row gap-4 justify-between items-center w-full">
-          {/* Actions & Filters Section */}
-          <div className="flex flex-col md:flex-row gap-3 w-full items-center">
+          {/* Stats Section */}
+          <div className="flex items-center gap-2 mr-auto border-r border-gray-800 pr-4">
+              <span className="text-sm font-medium text-gray-400">Tổng:</span>
+              <span className="text-xl font-bold text-brand-purple">
+                  {totalQuantity.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Tấn
+              </span>
+              <span className="text-xs text-gray-500 ml-2">({totalRows} Dòng)</span>
+              {(isPending || isSyncing) && <Loader2 className="w-4 h-4 text-brand-purple animate-spin ml-2" />}
+          </div>
 
-              <button onClick={onExportCSV} className="h-10 px-3 flex items-center gap-2 bg-blue-600/80 hover:bg-blue-700 border border-blue-500/50 text-white rounded-lg transition-all hover:shadow-lg active:scale-95 whitespace-nowrap mr-auto">
+          {/* Actions & Filters Section */}
+          <div className="flex flex-col md:flex-row gap-3 w-full xl:w-auto items-center">
+
+              <button onClick={onExportCSV} className="h-10 px-3 flex items-center gap-2 bg-blue-600/80 hover:bg-blue-700 border border-blue-500/50 text-white rounded-lg transition-all hover:shadow-lg active:scale-95 whitespace-nowrap">
                   <Download className="w-4 h-4" /><span className="hidden md:inline">CSV</span>
               </button>
               
