@@ -84,7 +84,7 @@ export const InventoryToolbar: React.FC<InventoryToolbarProps> = ({
               
               <button 
                 onClick={() => onUpdateFilter('showOddLots', !filterState.showOddLots)} 
-                className={`h-10 px-3 flex items-center gap-2 rounded-lg border transition-all text-sm font-medium whitespace-nowrap ${filterState.showOddLots ? 'bg-orange-500/10 border-orange-500 text-orange-500' : 'bg-slate-800 border-slate-600 text-gray-400 hover:text-white hover:border-gray-500'}`}
+                className={`h-10 px-3 flex items-center gap-2 rounded-lg border transition-all text-sm font-medium whitespace-nowrap active:scale-95 hover:shadow-lg ${filterState.showOddLots ? 'bg-orange-500/10 border-orange-500 text-orange-500' : 'bg-slate-800 border-slate-600 text-gray-400 hover:text-white hover:border-gray-500'}`}
               >
                   <Puzzle className="w-4 h-4" /><span className="hidden md:inline">Lô Lẻ</span>
                   {filterState.showOddLots && <Badge variant="warning" size="sm" className="ml-1 text-black bg-orange-500">10</Badge>}
@@ -92,7 +92,7 @@ export const InventoryToolbar: React.FC<InventoryToolbarProps> = ({
               
               <button 
                 onClick={() => onUpdateFilter('showPendingOut', !filterState.showPendingOut)} 
-                className={`h-10 px-3 flex items-center gap-2 rounded-lg border transition-all text-sm font-medium whitespace-nowrap ${filterState.showPendingOut ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-slate-800 border-slate-600 text-gray-400 hover:text-white hover:border-gray-500'}`}
+                className={`h-10 px-3 flex items-center gap-2 rounded-lg border transition-all text-sm font-medium whitespace-nowrap active:scale-95 hover:shadow-lg ${filterState.showPendingOut ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-slate-800 border-slate-600 text-gray-400 hover:text-white hover:border-gray-500'}`}
               >
                   <Hourglass className="w-4 h-4" /><span className="hidden md:inline">Chờ Xuất</span>
               </button>
@@ -115,7 +115,7 @@ export const InventoryToolbar: React.FC<InventoryToolbarProps> = ({
               
               <button 
                 onClick={() => onUpdateFilter('showAdvancedFilters', !filterState.showAdvancedFilters)} 
-                className={`h-10 px-3 flex items-center gap-2 rounded-lg border transition-all text-sm font-medium whitespace-nowrap ${filterState.showAdvancedFilters ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-600 text-gray-400 hover:text-white hover:border-gray-500'}`}
+                className={`h-10 px-3 flex items-center gap-2 rounded-lg border transition-all text-sm font-medium whitespace-nowrap active:scale-95 hover:shadow-lg ${filterState.showAdvancedFilters ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-600 text-gray-400 hover:text-white hover:border-gray-500'}`}
               >
                   <SlidersHorizontal className="w-4 h-4" /><span className="hidden md:inline">Bộ lọc</span>
               </button>
@@ -154,7 +154,7 @@ export const InventoryToolbar: React.FC<InventoryToolbarProps> = ({
               <div className="flex flex-col gap-2">
                   <div className="flex justify-between items-center">
                       <label className="text-xs font-semibold text-gray-400 uppercase">Lô/Dài (cm)</label>
-                       <button onClick={onClearRangeFilters} className="text-[10px] text-red-400 hover:text-red-300 underline">Xóa bộ lọc</button>
+                       <button onClick={onClearRangeFilters} className="text-[10px] text-red-400 hover:text-red-300 underline transition-all active:scale-95">Xóa bộ lọc</button>
                   </div>
                   <div className="flex items-center gap-2">
                       <Input 

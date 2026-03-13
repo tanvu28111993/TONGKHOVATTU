@@ -91,7 +91,7 @@ export const EditScheduleModal: React.FC<EditScheduleModalProps> = ({
             <Calendar className="w-5 h-5 text-brand-purple" />
             Cập Nhật Ngày Dự Kiến
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-gray-400 hover:text-white transition-all active:scale-95">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -119,7 +119,7 @@ export const EditScheduleModal: React.FC<EditScheduleModalProps> = ({
         <div className="p-4 border-t border-gray-800 flex justify-end gap-3 bg-slate-800/50 rounded-b-xl">
             <button 
                 onClick={onClose}
-                className="px-4 py-2 text-gray-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors text-sm font-medium"
+                className="px-4 py-2 text-gray-300 hover:text-white hover:bg-slate-700 rounded-lg transition-all active:scale-95 text-sm font-medium"
             >
                 Hủy bỏ
             </button>

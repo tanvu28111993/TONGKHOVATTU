@@ -82,7 +82,7 @@ export const ExpectedScheduleToolbar: React.FC<ExpectedScheduleToolbarProps> = (
               
               <button 
                 onClick={onImportClick}
-                className="h-10 px-3 flex items-center gap-2 bg-brand-purple hover:bg-brand-purple/90 text-white font-medium rounded-lg transition-colors shadow-lg shadow-brand-purple/20 whitespace-nowrap"
+                className="h-10 px-3 flex items-center gap-2 bg-brand-purple hover:bg-brand-purple/90 text-white font-medium rounded-lg transition-all hover:shadow-lg active:scale-95 shadow-brand-purple/20 whitespace-nowrap"
               >
                   <Upload className="w-4 h-4" /><span className="hidden md:inline">Tạo lịch</span>
               </button>

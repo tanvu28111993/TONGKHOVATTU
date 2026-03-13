@@ -192,7 +192,7 @@ export const ImportScheduleModal: React.FC<ImportScheduleModalProps> = ({ isOpen
                     />
                     <button 
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full h-9 px-3 bg-slate-700 hover:bg-slate-600 border border-gray-600 rounded text-white text-sm flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
+                      className="w-full h-9 px-3 bg-slate-700 hover:bg-slate-600 border border-gray-600 rounded text-white text-sm flex items-center justify-center gap-2 transition-all active:scale-95 whitespace-nowrap"
                     >
                       <Upload className="w-3 h-3" />
                       {parsedData.length > 0 ? 'Chọn lại' : 'Chọn File'}
@@ -325,14 +325,14 @@ export const ImportScheduleModal: React.FC<ImportScheduleModalProps> = ({ isOpen
         <div className="p-4 border-t border-gray-800 flex justify-end gap-3 bg-slate-900 rounded-b-xl">
           <button 
             onClick={onClose}
-            className="px-4 py-2 text-gray-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            className="px-4 py-2 text-gray-300 hover:text-white hover:bg-slate-800 rounded-lg transition-all active:scale-95"
           >
             Hủy bỏ
           </button>
           <button 
             onClick={handleConfirm}
             disabled={selectedIndices.size === 0}
-            className="px-6 py-2 bg-brand-purple hover:bg-brand-purple/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg shadow-lg shadow-brand-purple/20 flex items-center gap-2 transition-all"
+            className="px-6 py-2 bg-brand-purple hover:bg-brand-purple/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg shadow-lg shadow-brand-purple/20 flex items-center gap-2 transition-all active:scale-95"
           >
             <Check className="w-4 h-4" />
             Nhập {selectedIndices.size} dòng

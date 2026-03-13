@@ -42,7 +42,7 @@ export const ReferenceManager: React.FC = () => {
                                 handleResetForm();
                             }}
                             className={`
-                                w-full flex items-center gap-4 px-4 py-4 rounded-lg text-base font-medium transition-all mb-1
+                                w-full flex items-center gap-4 px-4 py-4 rounded-lg text-base font-medium transition-all mb-1 active:scale-95
                                 ${selectedCategory === cat.key 
                                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30 ring-1 ring-blue-400' 
                                     : 'bg-transparent text-gray-400 hover:bg-slate-800 hover:text-white'}
@@ -193,7 +193,7 @@ export const ReferenceManager: React.FC = () => {
                                             <button 
                                                 onClick={() => handleEdit(row)}
                                                 disabled={isSubmitting}
-                                                className="p-2 rounded-lg text-gray-500 hover:bg-blue-500/10 hover:text-blue-500 transition-colors border border-transparent hover:border-blue-500/20"
+                                                className="p-2 rounded-lg text-gray-500 hover:bg-blue-500/10 hover:text-blue-500 transition-all active:scale-95 border border-transparent hover:border-blue-500/20"
                                                 title="Sửa dòng này"
                                             >
                                                 <Pencil className="w-5 h-5" />

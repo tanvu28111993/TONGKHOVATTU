@@ -234,7 +234,7 @@ export const PaperCalculationManager: React.FC = () => {
             </div>
             <button 
                 onClick={handleResetInputs}
-                className="p-2 -mr-2 text-gray-500 hover:text-white hover:bg-white/10 rounded-full transition-all"
+                className="p-2 -mr-2 text-gray-500 hover:text-white hover:bg-white/10 rounded-full transition-all active:scale-95"
                 title="Xóa toàn bộ thông số"
             >
                 <RotateCcw className="w-4 h-4" />
@@ -368,7 +368,7 @@ export const PaperCalculationManager: React.FC = () => {
                 <button
                     onClick={() => setAllowCombine(!allowCombine)}
                     className={`
-                        w-full flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-200 outline-none
+                        w-full flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-200 outline-none active:scale-95
                         ${allowCombine 
                             ? 'bg-blue-500/10 border-blue-500 text-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.2)]' 
                             : 'bg-slate-900 border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-400'}
@@ -432,7 +432,7 @@ export const PaperCalculationManager: React.FC = () => {
             <div className="flex flex-col items-end pl-4 border-l border-gray-800 max-w-[50%]">
                 <button
                     onClick={() => setShowStockSizes(!showStockSizes)}
-                    className="text-sm font-black text-brand-purple uppercase tracking-wider flex items-center gap-2 hover:text-brand-purple transition-colors outline-none focus:text-brand-purple"
+                    className="text-sm font-black text-brand-purple uppercase tracking-wider flex items-center gap-2 hover:text-brand-purple transition-all active:scale-95 outline-none focus:text-brand-purple"
                 >
                      <List className="w-4 h-4" /> Danh sách khổ Lô
                      {showStockSizes ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
