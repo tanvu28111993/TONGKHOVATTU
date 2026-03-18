@@ -62,7 +62,7 @@ export const ExpectedScheduleRow = React.memo(({
                             px-4 py-0 text-sm whitespace-nowrap border-r border-gray-800 group-hover:border-gray-700 overflow-hidden
                             ${cellClass}
                             ${col.isNumeric ? 'text-right' : 'text-left'}
-                            ${isHighlighted ? 'bg-yellow-500/20 font-extrabold text-yellow-200' : ''}
+                            ${isHighlighted ? 'bg-yellow-500/20 font-black text-yellow-200' : ''}
                         `}
                     >
                         <div className="flex items-center h-full w-full">

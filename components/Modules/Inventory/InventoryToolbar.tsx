@@ -67,11 +67,11 @@ export const InventoryToolbar: React.FC<InventoryToolbarProps> = ({
       <div className="flex flex-col xl:flex-row gap-4 justify-between items-center w-full">
           {/* Stats Section */}
           <div className="flex items-center gap-2 mr-auto border-r border-gray-800 pr-4">
-              <span className="text-sm font-medium text-gray-400">Tổng:</span>
-              <span className="text-xl font-bold text-green-500">
+              <span className="text-sm font-black text-gray-400">Tổng:</span>
+              <span className="text-xl font-black text-[#bf00ff]">
                   {totalWeight.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Tấn
               </span>
-              <span className="text-xs text-gray-500 ml-2">({totalRows} Dòng)</span>
+              <span className="text-xs text-gray-500 ml-2 font-black">({totalRows} Dòng)</span>
               {(isPending || isSyncing) && <Loader2 className="w-4 h-4 text-blue-500 animate-spin ml-2" />}
           </div>
 
@@ -84,15 +84,15 @@ export const InventoryToolbar: React.FC<InventoryToolbarProps> = ({
               
               <button 
                 onClick={() => onUpdateFilter('showOddLots', !filterState.showOddLots)} 
-                className={`h-10 px-3 flex items-center gap-2 rounded-lg border transition-all text-sm font-medium whitespace-nowrap active:scale-95 hover:shadow-lg ${filterState.showOddLots ? 'bg-orange-500/10 border-orange-500 text-orange-500' : 'bg-slate-800 border-slate-600 text-gray-400 hover:text-white hover:border-gray-500'}`}
+                className={`h-10 px-3 flex items-center gap-2 rounded-lg border transition-all text-sm font-black whitespace-nowrap active:scale-95 hover:shadow-lg ${filterState.showOddLots ? 'bg-orange-500/10 border-[#FF8C00] text-[#FF8C00]' : 'bg-slate-800 border-slate-600 text-gray-400 hover:text-white hover:border-gray-500'}`}
               >
                   <Puzzle className="w-4 h-4" /><span className="hidden md:inline">Lô Lẻ</span>
-                  {filterState.showOddLots && <Badge variant="warning" size="sm" className="ml-1 text-black bg-orange-500">10</Badge>}
+                  {filterState.showOddLots && <Badge variant="warning" size="sm" className="ml-1 text-black bg-[#FF8C00]">10</Badge>}
               </button>
               
               <button 
                 onClick={() => onUpdateFilter('showPendingOut', !filterState.showPendingOut)} 
-                className={`h-10 px-3 flex items-center gap-2 rounded-lg border transition-all text-sm font-medium whitespace-nowrap active:scale-95 hover:shadow-lg ${filterState.showPendingOut ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-slate-800 border-slate-600 text-gray-400 hover:text-white hover:border-gray-500'}`}
+                className={`h-10 px-3 flex items-center gap-2 rounded-lg border transition-all text-sm font-black whitespace-nowrap active:scale-95 hover:shadow-lg ${filterState.showPendingOut ? 'bg-green-500/10 border-[#bf00ff] text-[#bf00ff]' : 'bg-slate-800 border-slate-600 text-gray-400 hover:text-white hover:border-gray-500'}`}
               >
                   <Hourglass className="w-4 h-4" /><span className="hidden md:inline">Chờ Xuất</span>
               </button>
@@ -115,7 +115,7 @@ export const InventoryToolbar: React.FC<InventoryToolbarProps> = ({
               
               <button 
                 onClick={() => onUpdateFilter('showAdvancedFilters', !filterState.showAdvancedFilters)} 
-                className={`h-10 px-3 flex items-center gap-2 rounded-lg border transition-all text-sm font-medium whitespace-nowrap active:scale-95 hover:shadow-lg ${filterState.showAdvancedFilters ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-600 text-gray-400 hover:text-white hover:border-gray-500'}`}
+                className={`h-10 px-3 flex items-center gap-2 rounded-lg border transition-all text-sm font-black whitespace-nowrap active:scale-95 hover:shadow-lg ${filterState.showAdvancedFilters ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-600 text-gray-400 hover:text-white hover:border-gray-500'}`}
               >
                   <SlidersHorizontal className="w-4 h-4" /><span className="hidden md:inline">Bộ lọc</span>
               </button>
@@ -134,41 +134,41 @@ export const InventoryToolbar: React.FC<InventoryToolbarProps> = ({
       {filterState.showAdvancedFilters && (
           <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-950/50 rounded-lg border border-slate-700/50 animate-fade-in">
               <div className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-gray-400 uppercase">Khổ (Rộng cm)</label>
+                  <label className="text-xs font-black text-gray-400 uppercase">Khổ (Rộng cm)</label>
                   <div className="flex items-center gap-2">
                       <Input 
                         placeholder="Từ" 
                         value={filterState.rangeFilters.widthMin} 
                         onChange={(e) => onUpdateFilter('rangeFilters', { ...filterState.rangeFilters, widthMin: e.target.value })} 
-                        className="h-8 py-1" 
+                        className="h-8 py-1 font-black" 
                       />
-                      <span className="text-gray-500">-</span>
+                      <span className="text-gray-500 font-black">-</span>
                       <Input 
                         placeholder="Đến" 
                         value={filterState.rangeFilters.widthMax} 
                         onChange={(e) => onUpdateFilter('rangeFilters', { ...filterState.rangeFilters, widthMax: e.target.value })} 
-                        className="h-8 py-1" 
+                        className="h-8 py-1 font-black" 
                       />
                   </div>
               </div>
               <div className="flex flex-col gap-2">
                   <div className="flex justify-between items-center">
-                      <label className="text-xs font-semibold text-gray-400 uppercase">Lô/Dài (cm)</label>
-                       <button onClick={onClearRangeFilters} className="text-[10px] text-red-400 hover:text-red-300 underline transition-all active:scale-95">Xóa bộ lọc</button>
+                      <label className="text-xs font-black text-gray-400 uppercase">Lô/Dài (cm)</label>
+                       <button onClick={onClearRangeFilters} className="text-[10px] text-red-400 hover:text-red-300 underline transition-all active:scale-95 font-black">Xóa bộ lọc</button>
                   </div>
                   <div className="flex items-center gap-2">
                       <Input 
                         placeholder="Từ" 
                         value={filterState.rangeFilters.lengthMin} 
                         onChange={(e) => onUpdateFilter('rangeFilters', { ...filterState.rangeFilters, lengthMin: e.target.value })} 
-                        className="h-8 py-1" 
+                        className="h-8 py-1 font-black" 
                       />
-                      <span className="text-gray-500">-</span>
+                      <span className="text-gray-500 font-black">-</span>
                       <Input 
                         placeholder="Đến" 
                         value={filterState.rangeFilters.lengthMax} 
                         onChange={(e) => onUpdateFilter('rangeFilters', { ...filterState.rangeFilters, lengthMax: e.target.value })} 
-                        className="h-8 py-1" 
+                        className="h-8 py-1 font-black" 
                       />
                   </div>
               </div>

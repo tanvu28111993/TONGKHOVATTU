@@ -98,7 +98,7 @@ export const InventoryRow = React.memo(({
                 } else if (getDefaultStyle) {
                     cellClass = getDefaultStyle(isOddLotRow, isPendingOutRow);
                 } else {
-                    cellClass = 'text-gray-300 font-bold';
+                    cellClass = 'text-gray-300 font-black';
                 }
 
                 let displayValue = value !== null && value !== undefined ? String(value) : "";

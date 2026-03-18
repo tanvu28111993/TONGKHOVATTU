@@ -48,7 +48,7 @@ export const ContentRouter: React.FC<ContentRouterProps> = React.memo(({ current
 
   return (
     <>
-      {Array.from(visitedMenus).map(menuId => {
+      {(Array.from(visitedMenus) as MenuId[]).map(menuId => {
         const Component = ROUTE_COMPONENTS[menuId];
         if (!Component) return null;
 

@@ -27,7 +27,7 @@ export const InventoryTableHeader: React.FC<InventoryTableHeaderProps> = React.m
   showCheckbox
 }) => {
   return (
-    <thead className="bg-slate-950 text-white text-base uppercase font-bold sticky top-0 z-20 shadow-sm ring-1 ring-white/5">
+    <thead className="bg-slate-950 text-white text-base uppercase font-black sticky top-0 z-20 shadow-sm ring-1 ring-white/5">
       <tr>
         {/* Checkbox Column */}
         {showCheckbox && (

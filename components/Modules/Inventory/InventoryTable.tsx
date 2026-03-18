@@ -204,7 +204,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     })
                     ) : (
                     <tr>
-                        <td colSpan={columns.length + 1} className="px-6 py-12 text-center text-gray-500">
+                        <td colSpan={columns.length + 1} className="px-6 py-12 text-center text-gray-500 font-black">
                         Không tìm thấy dữ liệu phù hợp.
                         </td>
                     </tr>
