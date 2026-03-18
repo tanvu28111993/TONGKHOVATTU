@@ -1,11 +1,13 @@
-import React, { useState, useRef } from 'react';
-import Papa from 'papaparse';
+import React, { useState, useRef, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import { ScheduleItem } from '../../../types';
 import { useCommandQueue } from '../../../contexts/CommandQueueContext';
 import { QueueCommand } from '../../../types';
-import { X, Upload, Check, AlertCircle } from 'lucide-react';
+import { X, Upload, Check, AlertCircle, Search } from 'lucide-react';
 import { useMetaDataQuery } from '../../../hooks/useMetaDataQuery';
 import { useAuth } from '../../../hooks/useAuth';
+import { Input } from '../../UI/Input';
+import { Select } from '../../UI/Select';
 
 interface ImportScheduleModalProps {
   isOpen: boolean;
@@ -27,85 +29,116 @@ export const ImportScheduleModal: React.FC<ImportScheduleModalProps> = ({ isOpen
   const [packetType, setPacketType] = useState<string>('');
   const [paperType, setPaperType] = useState<string>('');
   const [manufacturer, setManufacturer] = useState<string>('');
+  
+  // Search State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchColumn, setSearchColumn] = useState('all');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addCommand } = useCommandQueue();
   const { data: metaData } = useMetaDataQuery();
   const { user } = useAuth();
 
+  useEffect(() => {
+    if (isOpen) {
+      setParsedData([]);
+      setSelectedIndices(new Set());
+      setError(null);
+      setMaterialType('');
+      setPacketType('');
+      setPaperType('');
+      setManufacturer('');
+      setSearchTerm('');
+      setSearchColumn('all');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     setError(null);
     
-    Papa.parse(file, {
-      header: false, // We use index based parsing as per request
-      skipEmptyLines: true,
-      encoding: 'UTF-8', // Ensure correct encoding for Vietnamese
-      complete: (results) => {
-        try {
-          const rows = results.data as string[][];
-          
-          const dataRows = rows.filter(row => {
-             // Simple heuristic: Date column (index 0) should look like a date or be non-empty and not header keywords
-             const firstCol = row[0];
-             if (!firstCol) return false;
-             if (firstCol.includes('Ngày') || firstCol === '1') return false;
-             return true;
-          });
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      
+      // Convert to array of arrays
+      const rows = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1, defval: '' });
+      
+      const dataRows = rows.filter(row => {
+         // Simple heuristic: Date column (index 0) should look like a date or be non-empty and not header keywords
+         const firstCol = String(row[0] || '');
+         if (!firstCol) return false;
+         if (firstCol.includes('Ngày') || firstCol === '1') return false;
+         return true;
+      });
 
-          const mappedItems: ScheduleItem[] = dataRows.map((row, index) => {
-             const parseNumber = (val: string) => {
-                 if (!val) return 0;
-                 let cleanVal = val.replace(/\s/g, '');
-                 cleanVal = cleanVal.replace(',', '.');
-                 return parseFloat(cleanVal) || 0;
-             };
+      const mappedItems: ScheduleItem[] = dataRows.map((row, index) => {
+         const parseNumber = (val: any) => {
+             if (!val) return 0;
+             let cleanVal = String(val).replace(/\s/g, '');
+             cleanVal = cleanVal.replace(',', '.');
+             return parseFloat(cleanVal) || 0;
+         };
 
-             const formatDate = (dateStr: string) => {
-                 if (!dateStr) return '';
-                 const parts = dateStr.split(/[\/\-]/); // Handle / or -
-                 if (parts.length === 3) {
-                     // Assume DD/MM/YYYY
-                     return `${parts[2]}-${parts[1]}-${parts[0]}`;
-                 }
-                 return dateStr;
-             };
+         const formatDate = (dateVal: any) => {
+             if (!dateVal) return '';
+             
+             // Check if it's an Excel serial date number
+             if (typeof dateVal === 'number') {
+                 // Excel dates are number of days since Jan 1, 1900
+                 // Note: Excel incorrectly thinks 1900 is a leap year, so we subtract 1 day
+                 const date = new Date(Math.round((dateVal - 25569) * 86400 * 1000));
+                 const d = String(date.getDate()).padStart(2, '0');
+                 const m = String(date.getMonth() + 1).padStart(2, '0');
+                 const y = date.getFullYear();
+                 return `${y}-${m}-${d}`;
+             }
+             
+             const dateStr = String(dateVal);
+             const parts = dateStr.split(/[\/\-]/); // Handle / or -
+             if (parts.length === 3) {
+                 // Assume DD/MM/YYYY
+                 return `${parts[2]}-${parts[1]}-${parts[0]}`;
+             }
+             return dateStr;
+         };
 
-             return {
-                 id: `LVT-${Date.now()}-${index}`,
-                 purchaseDate: formatDate(row[0]),
-                 purchaseOrder: row[2] || '',
-                 supplierCode: row[3] || '',
-                 supplierName: row[4] || '',
-                 materialName: row[6] || '',
-                 orderCustomer: row[18] || '', // Col 19 -> Index 18
-                 gsm: parseNumber(row[10]), // Col 11 -> Index 10
-                 rollWidth: parseNumber(row[8]), // Col 9 -> Index 8
-                 length: parseNumber(row[11]), // Col 12 -> Index 11
-                 width: parseNumber(row[12]), // Col 13 -> Index 12
-                 quantity: parseNumber(row[13]), // Col 14 -> Index 13
-                 unit: row[7] || '', // Col 8 -> Index 7
-                 expectedArrivalDate: formatDate(row[16]), // Col 17 -> Index 16
-                 materialType: 'Giấy' // Default, will be overridden by selection
-             };
-          });
+         return {
+             id: `LVT-${Date.now()}-${index}`,
+             purchaseDate: formatDate(row[0]),
+             purchaseOrder: String(row[2] || ''),
+             supplierCode: String(row[3] || ''),
+             supplierName: String(row[4] || ''),
+             materialCode: String(row[6] || ''),
+             materialName: String(row[7] || ''),
+             orderCustomer: String(row[19] || ''), // Col 19 -> Index 18
+             gsm: parseNumber(row[11]), // Col 11 -> Index 10
+             rollWidth: parseNumber(row[9]), // Col 9 -> Index 8
+             length: parseNumber(row[12]), // Col 12 -> Index 11
+             width: parseNumber(row[13]), // Col 13 -> Index 12
+             quantity: parseNumber(row[14]), // Col 14 -> Index 13
+             unit: String(row[8] || ''), // Col 8 -> Index 7
+             expectedArrivalDate: formatDate(row[17]), // Col 17 -> Index 16
+             materialType: 'Giấy' // Default, will be overridden by selection
+         };
+      });
 
-          setParsedData(mappedItems);
-          // Auto select all
-          setSelectedIndices(new Set(mappedItems.map((_, i) => i)));
-        } catch (e) {
-          console.error(e);
-          setError("Lỗi khi đọc file CSV. Vui lòng kiểm tra định dạng.");
-        }
-      },
-      error: (err) => {
-        setError(`Lỗi CSV: ${err.message}`);
-      }
-    });
+      setParsedData(mappedItems);
+      // Auto select all
+      setSelectedIndices(new Set(mappedItems.map((_, i) => i)));
+    } catch (e) {
+      console.error(e);
+      setError("Lỗi khi đọc file Excel. Vui lòng kiểm tra định dạng.");
+    }
   };
 
   const toggleSelect = (index: number) => {
@@ -118,12 +151,28 @@ export const ImportScheduleModal: React.FC<ImportScheduleModalProps> = ({ isOpen
     setSelectedIndices(newSet);
   };
 
-  const toggleSelectAll = () => {
-    if (selectedIndices.size === parsedData.length) {
-      setSelectedIndices(new Set());
-    } else {
-      setSelectedIndices(new Set(parsedData.map((_, i) => i)));
+  const displayData = parsedData.map((item, index) => ({ item, index })).filter(({ item }) => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    if (searchColumn === 'all') {
+      return Object.values(item).some(val => String(val).toLowerCase().includes(term));
     }
+    return String(item[searchColumn as keyof ScheduleItem] || '').toLowerCase().includes(term);
+  });
+
+  const toggleSelectAll = () => {
+    const visibleIndices = displayData.map(d => d.index);
+    const allVisibleSelected = visibleIndices.length > 0 && visibleIndices.every(idx => selectedIndices.has(idx));
+    
+    const newSet = new Set(selectedIndices);
+    if (allVisibleSelected) {
+      // Deselect all visible
+      visibleIndices.forEach(idx => newSet.delete(idx));
+    } else {
+      // Select all visible
+      visibleIndices.forEach(idx => newSet.add(idx));
+    }
+    setSelectedIndices(newSet);
   };
 
   const handleConfirm = async () => {
@@ -167,7 +216,7 @@ export const ImportScheduleModal: React.FC<ImportScheduleModalProps> = ({ isOpen
         <div className="flex items-center justify-between p-4 border-b border-gray-800">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <Upload className="w-5 h-5 text-brand-purple" />
-            Nhập Lịch Dự Kiến Từ CSV
+            Nhập Lịch Dự Kiến Từ Excel
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
             <X className="w-6 h-6" />
@@ -181,11 +230,11 @@ export const ImportScheduleModal: React.FC<ImportScheduleModalProps> = ({ isOpen
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 p-4 bg-slate-800/50 rounded-lg border border-gray-700">
               {/* File Input */}
               <div className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-gray-400 uppercase">File CSV</label>
+                  <label className="text-xs font-semibold text-gray-400 uppercase">File Excel</label>
                   <div className="flex items-center gap-2">
                     <input 
                       type="file" 
-                      accept=".csv" 
+                      accept=".xls,.xlsx" 
                       ref={fileInputRef}
                       onChange={handleFileUpload}
                       className="hidden" 
@@ -270,53 +319,78 @@ export const ImportScheduleModal: React.FC<ImportScheduleModalProps> = ({ isOpen
 
           {/* Preview Table */}
           {parsedData.length > 0 && (
-            <div className="flex-1 overflow-auto border border-gray-800 rounded-lg bg-slate-950/50">
-              <table className="w-full text-left border-collapse text-sm">
-                <thead className="bg-slate-900 sticky top-0 z-10 text-gray-300 uppercase text-xs font-bold">
-                  <tr>
-                    <th className="p-3 border-b border-gray-800 w-10 text-center">
-                      <input 
-                        type="checkbox" 
-                        checked={selectedIndices.size === parsedData.length && parsedData.length > 0}
-                        onChange={toggleSelectAll}
-                        className="rounded border-gray-600 bg-slate-800 text-brand-purple focus:ring-brand-purple"
-                      />
-                    </th>
-                    <th className="p-3 border-b border-gray-800">Ngày mua</th>
-                    <th className="p-3 border-b border-gray-800">Đơn hàng</th>
-                    <th className="p-3 border-b border-gray-800">NCC</th>
-                    <th className="p-3 border-b border-gray-800">Vật tư</th>
-                    <th className="p-3 border-b border-gray-800 text-right">Định lượng</th>
-                    <th className="p-3 border-b border-gray-800 text-right">Khổ</th>
-                    <th className="p-3 border-b border-gray-800 text-right">Dài</th>
-                    <th className="p-3 border-b border-gray-800 text-right">SL</th>
-                    <th className="p-3 border-b border-gray-800">Ngày về</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-800">
-                  {parsedData.map((item, index) => (
-                    <tr key={index} className={`hover:bg-slate-800/50 transition-colors ${selectedIndices.has(index) ? 'bg-brand-purple/10' : ''}`}>
-                      <td className="p-3 text-center">
+            <div className="flex flex-col gap-3 flex-1 overflow-hidden">
+              <div className="flex items-center gap-3 justify-end">
+                <Input 
+                  icon={Search}
+                  placeholder="Tìm kiếm..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  containerClassName="w-full md:w-[300px]"
+                />
+                <Select 
+                  options={[
+                    { value: 'all', label: 'Tất cả thông tin' },
+                    { value: 'purchaseOrder', label: 'Đơn hàng' },
+                    { value: 'supplierName', label: 'Nhà cung cấp' },
+                    { value: 'materialCode', label: 'Mã vật tư' },
+                    { value: 'materialName', label: 'Tên vật tư' },
+                  ]}
+                  value={searchColumn}
+                  onChange={(e) => setSearchColumn(e.target.value)}
+                  containerClassName="w-full md:w-[200px]"
+                />
+              </div>
+              <div className="flex-1 overflow-auto border border-gray-800 rounded-lg bg-slate-950/50">
+                <table className="w-full text-left border-collapse text-sm">
+                  <thead className="bg-slate-900 sticky top-0 z-10 text-gray-300 uppercase text-xs font-bold">
+                    <tr>
+                      <th className="p-3 border-b border-gray-800 w-10 text-center">
                         <input 
                           type="checkbox" 
-                          checked={selectedIndices.has(index)}
-                          onChange={() => toggleSelect(index)}
+                          checked={displayData.length > 0 && displayData.every(d => selectedIndices.has(d.index))}
+                          onChange={toggleSelectAll}
                           className="rounded border-gray-600 bg-slate-800 text-brand-purple focus:ring-brand-purple"
                         />
-                      </td>
-                      <td className="p-3 text-gray-300">{item.purchaseDate}</td>
-                      <td className="p-3 text-gray-300">{item.purchaseOrder}</td>
-                      <td className="p-3 text-gray-300">{item.supplierName}</td>
-                      <td className="p-3 text-gray-300">{item.materialName}</td>
-                      <td className="p-3 text-right text-gray-300">{item.gsm}</td>
-                      <td className="p-3 text-right text-gray-300">{item.rollWidth}</td>
-                      <td className="p-3 text-right text-gray-300">{item.length}</td>
-                      <td className="p-3 text-right text-gray-300">{item.quantity}</td>
-                      <td className="p-3 text-gray-300">{item.expectedArrivalDate}</td>
+                      </th>
+                      <th className="p-3 border-b border-gray-800">Ngày mua</th>
+                      <th className="p-3 border-b border-gray-800">Đơn hàng</th>
+                      <th className="p-3 border-b border-gray-800">NCC</th>
+                      <th className="p-3 border-b border-gray-800">Mã vật tư</th>
+                      <th className="p-3 border-b border-gray-800">Tên vật tư</th>
+                      <th className="p-3 border-b border-gray-800 text-right">Định lượng</th>
+                      <th className="p-3 border-b border-gray-800 text-right">Khổ</th>
+                      <th className="p-3 border-b border-gray-800 text-right">Dài</th>
+                      <th className="p-3 border-b border-gray-800 text-right">SL</th>
+                      <th className="p-3 border-b border-gray-800">Ngày về</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800">
+                    {displayData.map(({ item, index }) => (
+                      <tr key={index} className={`hover:bg-slate-800/50 transition-colors ${selectedIndices.has(index) ? 'bg-brand-purple/10' : ''}`}>
+                        <td className="p-3 text-center">
+                          <input 
+                            type="checkbox" 
+                            checked={selectedIndices.has(index)}
+                            onChange={() => toggleSelect(index)}
+                            className="rounded border-gray-600 bg-slate-800 text-brand-purple focus:ring-brand-purple"
+                          />
+                        </td>
+                        <td className="p-3 text-gray-300">{item.purchaseDate}</td>
+                        <td className="p-3 text-gray-300">{item.purchaseOrder}</td>
+                        <td className="p-3 text-gray-300">{item.supplierName}</td>
+                        <td className="p-3 text-gray-300">{item.materialCode}</td>
+                        <td className="p-3 text-gray-300">{item.materialName}</td>
+                        <td className="p-3 text-right text-gray-300">{item.gsm}</td>
+                        <td className="p-3 text-right text-gray-300">{item.rollWidth}</td>
+                        <td className="p-3 text-right text-gray-300">{item.length}</td>
+                        <td className="p-3 text-right text-gray-300">{item.quantity}</td>
+                        <td className="p-3 text-gray-300">{item.expectedArrivalDate}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>

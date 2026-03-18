@@ -58,6 +58,7 @@ export const SCHEDULE_COLUMNS: ColumnConfig<ScheduleItem>[] = [
     { header: 'LOẠI VẬT TƯ', accessor: 'materialType', width: 170 },
     { header: 'MÃ NCC', accessor: 'supplierCode', width: 150 },
     { header: 'TÊN NHÀ CUNG CẤP', accessor: 'supplierName', width: 300 },
+    { header: 'MÃ VẬT TƯ', accessor: 'materialCode', width: 150 },
     { header: 'TÊN VẬT TƯ', accessor: 'materialName', width: 500 },
     { header: 'ĐƠN HÀNG/ KHÁCH HÀNG', accessor: 'orderCustomer', width: 200 },
     { header: 'LOẠI KIỆN', accessor: 'packetType', width: 150 },

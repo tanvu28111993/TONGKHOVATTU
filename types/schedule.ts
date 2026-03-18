@@ -5,6 +5,7 @@ export interface ScheduleItem {
   purchaseOrder: string;     // 2. Đơn hàng mua
   supplierCode: string;      // 3. Mã nhà cung cấp
   supplierName: string;      // 4. Tên nhà cung cấp
+  materialCode?: string;     // Mã vật tư
   materialName: string;      // 5. Tên vật tư
   orderCustomer: string;     // 6. Đơn hàng / Khách hàng
   gsm: number;               // 6.5 Định lượng

@@ -717,31 +717,32 @@ function handleGetSchedule() {
       if (!raw) continue;
       
       var parts = raw.split('|');
-      // id|materialType|purchaseDate|purchaseOrder|supplierCode|supplierName|materialName|orderCustomer|gsm|rollWidth|length|width|quantity|unit|expectedArrivalDate|packetType|paperType|manufacturer|importer|updatedAt
+      // id|purchaseOrder|materialType|supplierCode|supplierName|materialCode|materialName|orderCustomer|packetType|paperType|manufacturer|purchaseDate|gsm|rollWidth|length|width|quantity|unit|expectedArrivalDate|importer|updatedAt
       
       if (parts.length < 1) continue;
 
       var item = {
         id: parts[0] || "",
-        materialType: parts[1] || "",
-        purchaseDate: parts[2] || "",
-        purchaseOrder: parts[3] || "",
-        supplierCode: parts[4] || "",
-        supplierName: parts[5] || "",
+        purchaseOrder: parts[1] || "",
+        materialType: parts[2] || "",
+        supplierCode: parts[3] || "",
+        supplierName: parts[4] || "",
+        materialCode: parts[5] || "",
         materialName: parts[6] || "",
         orderCustomer: parts[7] || "",
-        gsm: Number(parts[8]) || 0,
-        rollWidth: Number(parts[9]) || 0,
-        length: Number(parts[10]) || 0,
-        width: Number(parts[11]) || 0,
-        quantity: Number(parts[12]) || 0,
-        unit: parts[13] || "",
-        expectedArrivalDate: parts[14] || "",
-        packetType: parts[15] || "",
-        paperType: parts[16] || "",
-        manufacturer: parts[17] || "",
-        importer: parts[18] || "",
-        updatedAt: parts[19] || ""
+        packetType: parts[8] || "",
+        paperType: parts[9] || "",
+        manufacturer: parts[10] || "",
+        purchaseDate: parts[11] || "",
+        gsm: Number(parts[12]) || 0,
+        rollWidth: Number(parts[13]) || 0,
+        length: Number(parts[14]) || 0,
+        width: Number(parts[15]) || 0,
+        quantity: Number(parts[16]) || 0,
+        unit: parts[17] || "",
+        expectedArrivalDate: parts[18] || "",
+        importer: parts[19] || "",
+        updatedAt: parts[20] || ""
       };
       scheduleItems.push(item);
     }
@@ -805,13 +806,17 @@ function processSaveSchedule(items) {
     items.forEach(function(item) {
         var parts = [
             item.id || "",
-            item.materialType || "",
-            item.purchaseDate || "",
             item.purchaseOrder || "",
+            item.materialType || "",
             item.supplierCode || "",
             item.supplierName || "",
+            item.materialCode || "",
             item.materialName || "",
             item.orderCustomer || "",
+            item.packetType || "",
+            item.paperType || "",
+            item.manufacturer || "",
+            item.purchaseDate || "",
             item.gsm || 0,
             item.rollWidth || 0,
             item.length || 0,
@@ -819,9 +824,6 @@ function processSaveSchedule(items) {
             item.quantity || 0,
             item.unit || "",
             item.expectedArrivalDate || "",
-            item.packetType || "",
-            item.paperType || "",
-            item.manufacturer || "",
             item.importer || "",
             item.updatedAt || ""
         ];
