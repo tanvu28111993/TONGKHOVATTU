@@ -52,6 +52,7 @@ export const GLOBAL_EVENTS = {
 export const QUERY_KEYS = {
   INVENTORY: ['inventory'],
   METADATA: ['metadata'],
+  SCHEDULE: ['schedule'],
 };
 
 export const DB_CONFIG = {

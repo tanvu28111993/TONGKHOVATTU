@@ -1,17 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ExpectedScheduleTable } from './ExpectedScheduleTable';
-import { ExpectedScheduleToolbar, ScheduleFilterState } from './ExpectedScheduleToolbar';
+import { ExpectedScheduleToolbar } from './ExpectedScheduleToolbar';
 import { ImportScheduleModal } from './ImportScheduleModal';
 import { EditScheduleModal } from './EditScheduleModal';
 import { SCHEDULE_COLUMNS } from '../../../utils/scheduleColumnConfig';
 import { ScheduleItem } from '../../../types';
-import { ScheduleService } from '../../../services/schedule';
 import { useToast } from '../../../contexts/ToastContext';
 import { useScheduleFilter } from '../../../hooks/useScheduleFilter';
+import { useScheduleQuery } from '../../../hooks/useScheduleQuery';
 
 export const ExpectedSchedule: React.FC = () => {
-  const [data, setData] = useState<ScheduleItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { schedule, isLoading, isFetching, refresh, updateLocalData } = useScheduleQuery();
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   
   // Edit Modal State
@@ -30,27 +29,10 @@ export const ExpectedSchedule: React.FC = () => {
     updateFilter,
     handleSort,
     exportAndDownloadCSV
-  } = useScheduleFilter(data);
-
-  const fetchData = async () => {
-      try {
-          setLoading(true);
-          const items = await ScheduleService.getSchedule();
-          setData(items);
-      } catch (error) {
-          console.error("Failed to fetch schedule", error);
-          addToast("Lỗi tải dữ liệu lịch dự kiến", "error");
-      } finally {
-          setLoading(false);
-      }
-  };
-
-  useEffect(() => {
-      fetchData();
-  }, []);
+  } = useScheduleFilter(schedule);
 
   const handleImport = (newItems: ScheduleItem[]) => {
-      setData(prev => [...prev, ...newItems]);
+      updateLocalData([...schedule, ...newItems]);
   };
 
   const handleExportCSV = () => {
@@ -63,7 +45,7 @@ export const ExpectedSchedule: React.FC = () => {
   };
 
   const handleUpdateItem = (updatedItem: ScheduleItem & { oldId?: string }) => {
-      setData(prev => prev.map(item => {
+      const newData = schedule.map(item => {
           // If ID changed (LVT -> LVTS), we match by oldId
           if (updatedItem.oldId && item.id === updatedItem.oldId) {
               return updatedItem;
@@ -73,7 +55,8 @@ export const ExpectedSchedule: React.FC = () => {
               return updatedItem;
           }
           return item;
-      }));
+      });
+      updateLocalData(newData);
       addToast("Cập nhật thành công!", "success");
   };
 
@@ -84,10 +67,10 @@ export const ExpectedSchedule: React.FC = () => {
             totalQuantity={totalQuantity}
             totalRows={displayData.length}
             isPending={isFiltering}
-            isSyncing={loading} 
+            isSyncing={isFetching || isLoading} 
             filterState={filters}
             onUpdateFilter={updateFilter}
-            onRefresh={fetchData}
+            onRefresh={refresh}
             onExportCSV={handleExportCSV}
             onImportClick={() => setIsImportModalOpen(true)}
             columns={SCHEDULE_COLUMNS}
@@ -96,7 +79,7 @@ export const ExpectedSchedule: React.FC = () => {
           <ExpectedScheduleTable 
             data={displayData}
             columns={SCHEDULE_COLUMNS}
-            isLoading={loading}
+            isLoading={isLoading}
             isSyncing={isFiltering}
             sortConfig={sortConfig}
             onSort={handleSort}
