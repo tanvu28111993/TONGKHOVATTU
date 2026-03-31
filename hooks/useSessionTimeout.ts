@@ -3,7 +3,7 @@ import { User } from '../types';
 
 export const useSessionTimeout = (user: User | null, logout: () => void) => {
   const logoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const TIMEOUT_DURATION = 10 * 60 * 1000; // 10 phút
+  const TIMEOUT_DURATION = 12 * 60 * 60 * 1000; // 12 giờ
 
   useEffect(() => {
     if (!user) {

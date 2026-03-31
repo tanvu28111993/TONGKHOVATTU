@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo, useEffect } from 'react';
 import { User } from '../types';
 import { useSessionTimeout } from '../hooks/useSessionTimeout';
 
@@ -11,15 +11,27 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const AUTH_STORAGE_KEY = 'kho_giay_auth_user';
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    // Khôi phục user từ localStorage khi khởi tạo
+    try {
+      const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (e) {
+      return null;
+    }
+  });
 
   const logout = useCallback(() => {
     setUser(null);
+    localStorage.removeItem(AUTH_STORAGE_KEY);
   }, []);
 
   const login = useCallback((userData: User) => {
     setUser(userData);
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userData));
   }, []);
 
   // Sử dụng custom hook để xử lý logic timeout

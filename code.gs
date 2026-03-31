@@ -465,14 +465,35 @@ function handleLogin(params) {
   
   if (!username || !password) return responseJSON({ success: false, message: "Thiếu thông tin" });
 
-  var ss = SpreadsheetApp.openById(ID_SHEET_DANG_NHAP);
-  var sheet = ss.getSheetByName("DN"); // Assuming the sheet name is still "DN" or default
-  if (!sheet) sheet = ss.getSheets()[0]; // Fallback to first sheet if DN not found
+  var cache = CacheService.getScriptCache();
+  var cachedUsers = cache.get("LOGIN_USERS");
+  var data;
 
-  var lastRow = sheet.getLastRow();
-  if (lastRow < 2) return responseJSON({ success: false, message: "Lỗi hệ thống hoặc chưa có dữ liệu user" });
-  
-  var data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
+  if (cachedUsers) {
+    try {
+      data = JSON.parse(cachedUsers);
+    } catch (e) {
+      data = null;
+    }
+  }
+
+  if (!data) {
+    var ss = SpreadsheetApp.openById(ID_SHEET_DANG_NHAP);
+    var sheet = ss.getSheetByName("DN"); // Assuming the sheet name is still "DN" or default
+    if (!sheet) sheet = ss.getSheets()[0]; // Fallback to first sheet if DN not found
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return responseJSON({ success: false, message: "Lỗi hệ thống hoặc chưa có dữ liệu user" });
+    
+    data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
+    // Cache for 6 hours (21600 seconds)
+    try {
+      cache.put("LOGIN_USERS", JSON.stringify(data), 21600);
+    } catch (e) {
+      console.error("Cache error: " + e.message);
+    }
+  }
+
   for (var i = 0; i < data.length; i++) {
     // Basic auth check
     if (String(data[i][0]) == username && String(data[i][1]) == password) {
